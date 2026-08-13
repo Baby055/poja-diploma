@@ -5,10 +5,9 @@ import lombok.Builder;
 import java.util.UUID;
 
 @Builder
-public record Course (
+public record Group (
         UUID id,
         String ref,
-        String title,
-        int credits,
-        Track track
+        Track track,
+        int academicYear
 ){}
