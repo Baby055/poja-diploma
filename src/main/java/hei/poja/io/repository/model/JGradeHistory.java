@@ -1,11 +1,10 @@
 package hei.poja.io.repository.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.*;
 
 @Entity
 @Table(name = "grade_history")
@@ -15,19 +14,19 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class JGradeHistory {
-    @Id private UUID id;
+  @Id private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private JGrade grade;
+  @ManyToOne(fetch = FetchType.LAZY)
+  private JGrade grade;
 
-    private BigDecimal previousValue;
+  private BigDecimal previousValue;
 
-    private BigDecimal newValue;
+  private BigDecimal newValue;
 
-    private String reason;
+  private String reason;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private JAppUser modifiedBy;
+  @ManyToOne(fetch = FetchType.LAZY)
+  private JAppUser modifiedBy;
 
-    private Instant modifiedAt;
+  private Instant modifiedAt;
 }

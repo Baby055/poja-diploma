@@ -2,9 +2,8 @@ package hei.poja.io.repository.model;
 
 import hei.poja.io.model.Track;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.util.UUID;
+import lombok.*;
 
 @Entity
 @Table(name = "app_group")
@@ -14,12 +13,12 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class JGroup {
-    @Id private UUID id;
+  @Id private UUID id;
 
-    private String ref;
+  private String ref;
 
-    @Enumerated(EnumType.STRING)
-    private Track track;
+  @Enumerated(EnumType.STRING)
+  private Track track;
 
-    private int academicYear;
+  private int academicYear;
 }

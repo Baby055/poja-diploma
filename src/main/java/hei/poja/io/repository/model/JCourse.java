@@ -2,24 +2,23 @@ package hei.poja.io.repository.model;
 
 import hei.poja.io.model.Track;
 import jakarta.persistence.*;
+import java.util.UUID;
 import lombok.*;
 
-import java.util.UUID;
-
 @Entity
-@Table(name="course")
+@Table(name = "course")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class JCourse {
-    @Id private UUID id;
+  @Id private UUID id;
 
-    private String ref;
-    private String title;
-    private int credits;
+  private String ref;
+  private String title;
+  private int credits;
 
-    @Enumerated(EnumType.STRING)
-    private Track track;
+  @Enumerated(EnumType.STRING)
+  private Track track;
 }

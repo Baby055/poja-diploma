@@ -1,9 +1,8 @@
 package hei.poja.io.repository.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.util.UUID;
+import lombok.*;
 
 @Entity
 @Table(name = "teacher")
@@ -13,12 +12,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class JTeacher {
-    @Id private UUID id;
+  @Id private UUID id;
 
-    @OneToOne
-    @MapsId
-    private JAppUser user;
+  @OneToOne @MapsId private JAppUser user;
 
-    private  String firstName;
-    private String lastName;
+  private String firstName;
+  private String lastName;
 }

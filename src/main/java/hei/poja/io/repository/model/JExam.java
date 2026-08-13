@@ -1,11 +1,10 @@
 package hei.poja.io.repository.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.*;
 
 @Entity
 @Table(name = "exam")
@@ -15,18 +14,18 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class JExam {
-    @Id private UUID id;
+  @Id private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private JCourse course;
+  @ManyToOne(fetch = FetchType.LAZY)
+  private JCourse course;
 
-    private String title;
+  private String title;
 
-    private Instant dateExam;
+  private Instant dateExam;
 
-    private BigDecimal coefficient;
+  private BigDecimal coefficient;
 
-    private int academicYear;
+  private int academicYear;
 
-    private int semester;
+  private int semester;
 }

@@ -2,24 +2,22 @@ package hei.poja.io.repository.model;
 
 import hei.poja.io.model.Role;
 import jakarta.persistence.*;
+import java.util.UUID;
 import lombok.*;
 
-import java.util.UUID;
-
-
 @Entity
-@Table(name="app_user")
+@Table(name = "app_user")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class JAppUser {
-    @Id private UUID id;
+  @Id private UUID id;
 
-    private String email;
-    private String passwordHash;
+  private String email;
+  private String passwordHash;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+  @Enumerated(EnumType.STRING)
+  private Role role;
 }
