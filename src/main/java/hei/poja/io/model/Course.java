@@ -1,14 +1,7 @@
 package hei.poja.io.model;
 
+import java.util.UUID;
 import lombok.Builder;
 
-import java.util.UUID;
-
 @Builder
-public record Course (
-        UUID id,
-        String ref,
-        String title,
-        int credits,
-        Track track
-){}
+public record Course(UUID id, String ref, String title, int credits, Track track) {}
