@@ -1,6 +1,5 @@
 package hei.poja.io.repository.model;
 
-import hei.poja.io.model.Student;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -18,7 +17,7 @@ public class JGrade {
   @Id private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  private Student student;
+  private JStudent student;
 
   @ManyToOne(fetch = FetchType.LAZY)
   private JExam exam;
