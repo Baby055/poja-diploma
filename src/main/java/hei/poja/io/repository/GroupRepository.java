@@ -9,5 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface GroupRepository extends JpaRepository<JGroup, UUID> {
-    List<JGroup> findByAcademicYear(UUID academicYear);
+    List<JGroup> findByAcademicYear(int academicYear);
 }
