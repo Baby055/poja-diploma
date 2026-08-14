@@ -4,6 +4,7 @@ import hei.poja.io.exception.NotFoundException;
 import hei.poja.io.mapper.ExamMapper;
 import hei.poja.io.model.Exam;
 import hei.poja.io.model.Role;
+import hei.poja.io.repository.AppUserRepository;
 import hei.poja.io.repository.CourseAssignmentRepository;
 import hei.poja.io.repository.CourseRepository;
 import hei.poja.io.repository.ExamRepository;
@@ -12,6 +13,7 @@ import hei.poja.io.repository.model.JCourse;
 import hei.poja.io.repository.model.JExam;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -23,7 +25,12 @@ public class ExamService {
   private final ExamRepository examRepository;
   private final CourseRepository courseRepository;
   private final CourseAssignmentRepository courseAssignmentRepository;
+  private final AppUserRepository appUserRepository;
   private final ExamMapper examMapper;
+
+  public List<Exam> findByCourse(UUID courseId) {
+    return examMapper.toModel(examRepository.findByCourseId(courseId));
+  }
 
   public Exam createExam(
       UUID courseId,
@@ -32,7 +39,11 @@ public class ExamService {
       BigDecimal coefficient,
       int academicYear,
       int semester,
-      JAppUser actingUser) {
+      UUID actingUserId) {
+    JAppUser actingUser =
+            appUserRepository
+                    .findById(actingUserId)
+                    .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
     JCourse course =
         courseRepository
             .findById(courseId)
