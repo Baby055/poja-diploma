@@ -10,14 +10,14 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class AppUserDetailsService implements UserDetailsService {
-    private final AppUserRepository appUserRepository;
+  private final AppUserRepository appUserRepository;
 
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        var appUser =
-                appUserRepository
-                        .findByEmail(email)
-                        .orElseThrow(() -> new UsernameNotFoundException("Unknown user: " + email));
-        return new AppUserDetails(appUser);
-    }
+  @Override
+  public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    var appUser =
+        appUserRepository
+            .findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("Unknown user: " + email));
+    return new AppUserDetails(appUser);
+  }
 }
