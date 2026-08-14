@@ -1,6 +1,5 @@
 package hei.poja.io.repository;
 
-import hei.poja.io.model.AppUser;
 import hei.poja.io.repository.model.JAppUser;
 import java.util.Optional;
 import java.util.UUID;

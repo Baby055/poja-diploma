@@ -11,92 +11,88 @@ import hei.poja.io.repository.StudentGroupHistoryRepository;
 import hei.poja.io.repository.StudentRepository;
 import hei.poja.io.repository.model.JGroup;
 import hei.poja.io.repository.model.JStudentGroupHistory;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
 @Service
 @AllArgsConstructor
 public class GroupService {
-    private final GroupRepository repository;
-    private final StudentRepository studentRepository;
-    private final StudentGroupHistoryRepository studentGroupHistoryRepository;
-    private final GroupMapper mapper;
-    private final StudentGroupHistoryMapper studentGroupHistoryMapper;
+  private final GroupRepository repository;
+  private final StudentRepository studentRepository;
+  private final StudentGroupHistoryRepository studentGroupHistoryRepository;
+  private final GroupMapper mapper;
+  private final StudentGroupHistoryMapper studentGroupHistoryMapper;
 
-    public List<Group> findAll() {
-        return mapper.toModel(repository.findAll());
-    }
+  public List<Group> findAll() {
+    return mapper.toModel(repository.findAll());
+  }
 
-    public Group findById(UUID id) {
-        return mapper.toModel(
-                repository
-                        .findById(id)
-                        .orElseThrow(() -> new NotFoundException("Group introuvable"))
-        );
-    }
+  public Group findById(UUID id) {
+    return mapper.toModel(
+        repository.findById(id).orElseThrow(() -> new NotFoundException("Group introuvable")));
+  }
 
-    public Group create(String ref , Track track, int academicYear){
-        JGroup group =
-                JGroup.builder()
-                        .id(UUID.randomUUID())
-                        .ref(ref)
-                        .track(track)
-                        .academicYear(academicYear)
-                        .build();
-        return mapper.toModel(repository.save(group));
-    }
+  public Group create(String ref, Track track, int academicYear) {
+    JGroup group =
+        JGroup.builder()
+            .id(UUID.randomUUID())
+            .ref(ref)
+            .track(track)
+            .academicYear(academicYear)
+            .build();
+    return mapper.toModel(repository.save(group));
+  }
 
-    public Group update(UUID id, String ref, Track track, int academicYear){
-        JGroup group =
-                repository
-                        .findById(id)
-                        .orElseThrow(() -> new NotFoundException("Group introuvable"));
-        group.setRef(ref);
-        group.setTrack(track);
-        group.setAcademicYear(academicYear);
-        return mapper.toModel(repository.save(group));
-    }
+  public Group update(UUID id, String ref, Track track, int academicYear) {
+    JGroup group =
+        repository.findById(id).orElseThrow(() -> new NotFoundException("Group introuvable"));
+    group.setRef(ref);
+    group.setTrack(track);
+    group.setAcademicYear(academicYear);
+    return mapper.toModel(repository.save(group));
+  }
 
-    public void deleteById(UUID id) {
-        repository.deleteById(id);
-    }
+  public void deleteById(UUID id) {
+    repository.deleteById(id);
+  }
 
-    @Transactional
-    public StudentGroupHistory changeGroup(UUID studentId, UUID newGroupId) {
-        var student =
-                studentRepository
-                        .findById(studentId)
-                        .orElseThrow(() -> new NotFoundException("Student introuvable"));
-        JGroup newGroup =
-                repository.findById(newGroupId).orElseThrow(() -> new NotFoundException("Group introuvable"));
+  @Transactional
+  public StudentGroupHistory changeGroup(UUID studentId, UUID newGroupId) {
+    var student =
+        studentRepository
+            .findById(studentId)
+            .orElseThrow(() -> new NotFoundException("Student introuvable"));
+    JGroup newGroup =
+        repository
+            .findById(newGroupId)
+            .orElseThrow(() -> new NotFoundException("Group introuvable"));
 
-        Instant now = Instant.now();
-        studentGroupHistoryRepository
-                .findByStudentIdAndToDateIsNull(studentId)
-                .ifPresent(
-                        current -> {
-                            current.setToDate(now);
-                            studentGroupHistoryRepository.save(current);
-                        });
+    Instant now = Instant.now();
+    studentGroupHistoryRepository
+        .findByStudentIdAndToDateIsNull(studentId)
+        .ifPresent(
+            current -> {
+              current.setToDate(now);
+              studentGroupHistoryRepository.save(current);
+            });
 
-        JStudentGroupHistory entry =
-                JStudentGroupHistory.builder()
-                        .id(UUID.randomUUID())
-                        .student(student)
-                        .group(newGroup)
-                        .fromDate(now)
-                        .build();
-        return studentGroupHistoryMapper.toModel(studentGroupHistoryRepository.save(entry));
-    }
+    JStudentGroupHistory entry =
+        JStudentGroupHistory.builder()
+            .id(UUID.randomUUID())
+            .student(student)
+            .group(newGroup)
+            .fromDate(now)
+            .build();
+    return studentGroupHistoryMapper.toModel(studentGroupHistoryRepository.save(entry));
+  }
 
-    @Transactional(readOnly = true)
-    public List<StudentGroupHistory> history(UUID studentId) {
-        return studentGroupHistoryMapper.toModel(
-                studentGroupHistoryRepository.findByStudentIdOrderByFromDateDesc(studentId));
-    }
+  @Transactional(readOnly = true)
+  public List<StudentGroupHistory> history(UUID studentId) {
+    return studentGroupHistoryMapper.toModel(
+        studentGroupHistoryRepository.findByStudentIdOrderByFromDateDesc(studentId));
+  }
 }
