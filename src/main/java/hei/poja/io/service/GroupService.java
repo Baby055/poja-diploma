@@ -4,6 +4,7 @@ import hei.poja.io.exception.NotFoundException;
 import hei.poja.io.mapper.GroupMapper;
 import hei.poja.io.mapper.StudentGroupHistoryMapper;
 import hei.poja.io.model.Group;
+import hei.poja.io.model.Role;
 import hei.poja.io.model.StudentGroupHistory;
 import hei.poja.io.model.Track;
 import hei.poja.io.repository.GroupRepository;
@@ -14,7 +15,10 @@ import hei.poja.io.repository.model.JStudentGroupHistory;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+
+import hei.poja.io.security.AppUserDetails;
 import lombok.AllArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,8 +95,12 @@ public class GroupService {
   }
 
   @Transactional(readOnly = true)
-  public List<StudentGroupHistory> history(UUID studentId) {
+  public List<StudentGroupHistory> history(UUID studentId, AppUserDetails principal) {
+    boolean isStaff = principal.hasRole(Role.TEACHER) || principal.hasRole(Role.ADMIN);
+    if (!isStaff && !principal.getId().equals(studentId)) {
+      throw new AccessDeniedException("Vous ne pouvez voir que votre propre historique de groupe");
+    }
     return studentGroupHistoryMapper.toModel(
-        studentGroupHistoryRepository.findByStudentIdOrderByFromDateDesc(studentId));
+            studentGroupHistoryRepository.findByStudentIdOrderByFromDateDesc(studentId));
   }
 }
