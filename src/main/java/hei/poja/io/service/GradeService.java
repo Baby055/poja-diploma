@@ -12,6 +12,7 @@ import hei.poja.io.repository.model.JAppUser;
 import hei.poja.io.repository.model.JExam;
 import hei.poja.io.repository.model.JGrade;
 import hei.poja.io.repository.model.JGradeHistory;
+import hei.poja.io.security.AppUserDetails;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -29,11 +30,16 @@ public class GradeService {
   private final ExamRepository examRepository;
   private final CourseAssignmentRepository courseAssignmentRepository;
   private final StudentRepository studentRepository;
+  private final AppUserRepository appUserRepository;
   private final GradeMapper gradeMapper;
   private final GradeHistoryMapper gradeHistoryMapper;
 
   @Transactional(readOnly = true)
-  public List<Grade> getGradesForStudent(UUID studentId) {
+  public List<Grade> getGradesForStudent(UUID studentId, AppUserDetails principal) {
+    boolean isStaff = principal.hasRole(Role.TEACHER) || principal.hasRole(Role.ADMIN);
+    if (!isStaff && !principal.getId().equals(studentId)) {
+      throw new AccessDeniedException("Vous ne pouvez voir que vos propres notes");
+    }
     return gradeMapper.toModel(gradeRepository.findByStudentId(studentId));
   }
 
@@ -45,7 +51,11 @@ public class GradeService {
 
   @Transactional
   public Grade setGrade(
-      UUID studentId, UUID examId, BigDecimal newValue, String reason, JAppUser actingUser) {
+      UUID studentId, UUID examId, BigDecimal newValue, String reason, UUID actingUserId) {
+    JAppUser actingUser =
+        appUserRepository
+            .findById(actingUserId)
+            .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
     JExam exam =
         examRepository
             .findById(examId)

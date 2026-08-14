@@ -4,6 +4,7 @@ import hei.poja.io.exception.NotFoundException;
 import hei.poja.io.mapper.ExamMapper;
 import hei.poja.io.model.Exam;
 import hei.poja.io.model.Role;
+import hei.poja.io.repository.AppUserRepository;
 import hei.poja.io.repository.CourseAssignmentRepository;
 import hei.poja.io.repository.CourseRepository;
 import hei.poja.io.repository.ExamRepository;
@@ -23,6 +24,7 @@ public class ExamService {
   private final ExamRepository examRepository;
   private final CourseRepository courseRepository;
   private final CourseAssignmentRepository courseAssignmentRepository;
+  private final AppUserRepository appUserRepository;
   private final ExamMapper examMapper;
 
   public Exam createExam(
@@ -32,7 +34,11 @@ public class ExamService {
       BigDecimal coefficient,
       int academicYear,
       int semester,
-      JAppUser actingUser) {
+      UUID actingUserId) {
+    JAppUser actingUser =
+        appUserRepository
+            .findById(actingUserId)
+            .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
     JCourse course =
         courseRepository
             .findById(courseId)
