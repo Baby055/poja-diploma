@@ -1,5 +1,6 @@
 package hei.poja.io.security;
 
+import hei.poja.io.model.Role;
 import hei.poja.io.repository.model.JAppUser;
 import java.util.List;
 import java.util.UUID;
@@ -21,5 +22,10 @@ public class AppUserDetails extends User {
 
   public UUID getId() {
     return id;
+  }
+
+  public boolean hasRole(Role role) {
+    return getAuthorities().stream()
+        .anyMatch(authority -> authority.getAuthority().equals("ROLE_" + role.name()));
   }
 }
