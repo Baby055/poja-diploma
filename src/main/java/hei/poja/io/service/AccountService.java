@@ -13,7 +13,7 @@ import hei.poja.io.repository.TeacherRepository;
 import hei.poja.io.repository.model.JAppUser;
 import hei.poja.io.repository.model.JStudent;
 import hei.poja.io.repository.model.JTeacher;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
