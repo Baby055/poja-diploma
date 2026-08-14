@@ -12,11 +12,10 @@ import hei.poja.io.repository.StudentGroupHistoryRepository;
 import hei.poja.io.repository.StudentRepository;
 import hei.poja.io.repository.model.JGroup;
 import hei.poja.io.repository.model.JStudentGroupHistory;
+import hei.poja.io.security.AppUserDetails;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-
-import hei.poja.io.security.AppUserDetails;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -101,6 +100,6 @@ public class GroupService {
       throw new AccessDeniedException("Vous ne pouvez voir que votre propre historique de groupe");
     }
     return studentGroupHistoryMapper.toModel(
-            studentGroupHistoryRepository.findByStudentIdOrderByFromDateDesc(studentId));
+        studentGroupHistoryRepository.findByStudentIdOrderByFromDateDesc(studentId));
   }
 }

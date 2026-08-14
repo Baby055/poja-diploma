@@ -43,12 +43,11 @@ public class GraduateExportService {
   @Transactional(readOnly = true)
   public List<Promotion> promotions() {
     return studentMapper.toModel(studentRepository.findAll()).stream()
-            .map(s -> new Promotion(s.enrollmentYear(), s.track()))
-            .distinct()
-            .sorted(
-                    Comparator.comparing(Promotion::enrollmentYear)
-                            .thenComparing(p -> p.track().name()))
-            .toList();
+        .map(s -> new Promotion(s.enrollmentYear(), s.track()))
+        .distinct()
+        .sorted(
+            Comparator.comparing(Promotion::enrollmentYear).thenComparing(p -> p.track().name()))
+        .toList();
   }
 
   @Transactional(readOnly = true)

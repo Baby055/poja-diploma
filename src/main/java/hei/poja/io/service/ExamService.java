@@ -36,9 +36,9 @@ public class ExamService {
       int semester,
       UUID actingUserId) {
     JAppUser actingUser =
-            appUserRepository
-                    .findById(actingUserId)
-                    .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
+        appUserRepository
+            .findById(actingUserId)
+            .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
     JCourse course =
         courseRepository
             .findById(courseId)

@@ -12,12 +12,11 @@ import hei.poja.io.repository.model.JAppUser;
 import hei.poja.io.repository.model.JExam;
 import hei.poja.io.repository.model.JGrade;
 import hei.poja.io.repository.model.JGradeHistory;
+import hei.poja.io.security.AppUserDetails;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-
-import hei.poja.io.security.AppUserDetails;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -52,11 +51,11 @@ public class GradeService {
 
   @Transactional
   public Grade setGrade(
-          UUID studentId, UUID examId, BigDecimal newValue, String reason, UUID actingUserId) {
+      UUID studentId, UUID examId, BigDecimal newValue, String reason, UUID actingUserId) {
     JAppUser actingUser =
-            appUserRepository
-                    .findById(actingUserId)
-                    .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
+        appUserRepository
+            .findById(actingUserId)
+            .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
     JExam exam =
         examRepository
             .findById(examId)
