@@ -1,0 +1,707 @@
+openapi: 3.0.3
+info:
+  title: Diploma API
+  description: >
+    Gestion des cours, notes (historisees), relevés PDF (S3 + email async) et export XLSX
+    des diplomes pour HEI (parcours EL / TN).
+  version: "1.0.0"
+servers:
+  - url: /
+
+security:
+  - basicAuth: []
+
+tags:
+  - name: Accounts
+  - name: Courses
+  - name: Groups
+  - name: CourseAssignments
+  - name: Exams
+  - name: Grades
+  - name: Transcripts
+  - name: Graduates
+
+paths:
+  /students:
+    post:
+      tags: [Accounts]
+      summary: Creer un compte etudiant (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStudentRequest'
+      responses:
+        '201':
+          description: Etudiant cree
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /teachers:
+    post:
+      tags: [Accounts]
+      summary: Creer un compte enseignant (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTeacherRequest'
+      responses:
+        '201':
+          description: Enseignant cree
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Teacher'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admins:
+    post:
+      tags: [Accounts]
+      summary: Creer un compte administrateur (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAdminRequest'
+      responses:
+        '201':
+          description: Admin cree (pas de corps)
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /courses:
+    get:
+      tags: [Courses]
+      summary: Lister tous les cours
+      responses:
+        '200':
+          description: Liste des cours
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Course' }
+    post:
+      tags: [Courses]
+      summary: Creer un cours (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CourseRequest' }
+      responses:
+        '201':
+          description: Cours cree
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Course' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /courses/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPathParam'
+    get:
+      tags: [Courses]
+      summary: Recuperer un cours
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Course' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Courses]
+      summary: Modifier un cours (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CourseRequest' }
+      responses:
+        '200':
+          description: Cours mis a jour
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Course' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Courses]
+      summary: Supprimer un cours (ADMIN)
+      responses:
+        '204': { description: Supprime }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /groups:
+    get:
+      tags: [Groups]
+      summary: Lister tous les groupes
+      responses:
+        '200':
+          description: Liste des groupes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Group' }
+    post:
+      tags: [Groups]
+      summary: Creer un groupe (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupRequest' }
+      responses:
+        '201':
+          description: Groupe cree
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Group' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /groups/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPathParam'
+    get:
+      tags: [Groups]
+      summary: Recuperer un groupe
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Group' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Groups]
+      summary: Modifier un groupe (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupRequest' }
+      responses:
+        '200':
+          description: Groupe mis a jour
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Group' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Groups]
+      summary: Supprimer un groupe (ADMIN)
+      responses:
+        '204': { description: Supprime }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /students/{studentId}/group:
+    post:
+      tags: [Groups]
+      summary: Changer le groupe d'un etudiant (ADMIN)
+      description: >
+        Ferme l'appartenance courante (to_date=now) et en ouvre une nouvelle.
+        Les notes de l'etudiant ne sont jamais impactees.
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChangeGroupRequest' }
+      responses:
+        '201':
+          description: Nouvelle entree d'historique de groupe creee
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StudentGroupHistory' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /students/{studentId}/group-history:
+    get:
+      tags: [Groups]
+      summary: Historique des groupes d'un etudiant
+      description: L'etudiant ne peut consulter que le sien ; TEACHER/ADMIN consultent librement.
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPathParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/StudentGroupHistory' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /course-assignments:
+    get:
+      tags: [CourseAssignments]
+      summary: Lister toutes les assignations cours/enseignant/groupe
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CourseAssignment' }
+    post:
+      tags: [CourseAssignments]
+      summary: Assigner un cours a un enseignant pour un groupe/annee (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CourseAssignmentRequest' }
+      responses:
+        '201':
+          description: Assignation creee
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CourseAssignment' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /course-assignments/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPathParam'
+    get:
+      tags: [CourseAssignments]
+      summary: Recuperer une assignation
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CourseAssignment' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [CourseAssignments]
+      summary: Modifier une assignation (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CourseAssignmentRequest' }
+      responses:
+        '200':
+          description: Assignation mise a jour
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CourseAssignment' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [CourseAssignments]
+      summary: Supprimer une assignation (ADMIN)
+      responses:
+        '204': { description: Supprimee }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /exams:
+    get:
+      tags: [Exams]
+      summary: Lister les examens d'un cours
+      parameters:
+        - name: courseId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Exam' }
+    post:
+      tags: [Exams]
+      summary: Creer un examen (TEACHER assigne au cours, ou ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateExamRequest' }
+      responses:
+        '201':
+          description: Examen cree
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exam' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /students/{studentId}/grades:
+    get:
+      tags: [Grades]
+      summary: Lister les notes d'un etudiant
+      description: L'etudiant ne voit que les siennes ; TEACHER/ADMIN voient celles de tous.
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPathParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Grade' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Grades]
+      summary: Poser ou corriger une note (TEACHER assigne au cours, ou ADMIN)
+      description: >
+        La raison est obligatoire des qu'une note existe deja pour cet (etudiant, examen) ;
+        chaque changement est historise (voir GradeHistory).
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetGradeRequest' }
+      responses:
+        '201':
+          description: Note posee/corrigee
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Grade' }
+        '400':
+          description: Raison obligatoire pour corriger une note existante
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /students/{studentId}/transcript:
+    post:
+      tags: [Transcripts]
+      summary: Generer et envoyer le releve de notes par email (asynchrone)
+      description: >
+        Genere le PDF (provisoire ou complet), l'upload sur S3, puis envoie un email avec un
+        lien de telechargement presigne. Traitement asynchrone : repond 202 immediatement.
+        Un STUDENT ne peut demander que le sien ; TEACHER/ADMIN peuvent demander celui de
+        n'importe quel etudiant.
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPathParam'
+        - name: complete
+          in: query
+          required: false
+          schema: { type: boolean, default: false }
+          description: false = releve provisoire, true = releve complet
+      responses:
+        '202': { description: Generation et envoi declenches }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /promotions/{enrollmentYear}/{track}/graduates:
+    get:
+      tags: [Graduates]
+      summary: Liste des diplomes d'une promotion (JSON)
+      parameters:
+        - $ref: '#/components/parameters/EnrollmentYearPathParam'
+        - $ref: '#/components/parameters/TrackPathParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/GraduateRow' }
+
+  /promotions/{enrollmentYear}/{track}/graduates/export:
+    get:
+      tags: [Graduates]
+      summary: Telechargement direct du XLSX des diplomes (sans email)
+      description: >
+        Genere le fichier XLSX (colonnes rang, STD, nom, prenom, moyenne generale), l'upload
+        sur S3, puis redirige (302) vers une URL S3 presignee pour telechargement direct.
+      parameters:
+        - $ref: '#/components/parameters/EnrollmentYearPathParam'
+        - $ref: '#/components/parameters/TrackPathParam'
+      responses:
+        '302':
+          description: Redirection vers l'URL S3 presignee du fichier XLSX
+          headers:
+            Location:
+              schema: { type: string, format: uri }
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+
+  parameters:
+    IdPathParam:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    StudentIdPathParam:
+      name: studentId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    EnrollmentYearPathParam:
+      name: enrollmentYear
+      in: path
+      required: true
+      schema: { type: integer, example: 2024 }
+    TrackPathParam:
+      name: track
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/Track' }
+
+  responses:
+    BadRequest:
+      description: Requete invalide / regle de gestion violee
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Forbidden:
+      description: Acces refuse
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: Ressource introuvable
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Conflict:
+      description: Conflit avec l'etat actuel des donnees (ex. email deja utilise)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  schemas:
+    Track:
+      type: string
+      enum: [EL, TN]
+
+    Role:
+      type: string
+      enum: [STUDENT, TEACHER, ADMIN]
+
+    ErrorResponse:
+      type: object
+      properties:
+        message: { type: string }
+
+    AppUser:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/Role' }
+
+    Student:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        user: { $ref: '#/components/schemas/AppUser' }
+        firstName: { type: string }
+        lastName: { type: string }
+        track: { $ref: '#/components/schemas/Track' }
+        enrollmentYear: { type: integer, example: 2024 }
+
+    Teacher:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        user: { $ref: '#/components/schemas/AppUser' }
+        firstName: { type: string }
+        lastName: { type: string }
+
+    Course:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        ref: { type: string, example: ALG101 }
+        title: { type: string }
+        credits: { type: integer }
+        track:
+          allOf: [{ $ref: '#/components/schemas/Track' }]
+          nullable: true
+          description: null = tronc commun (EL et TN)
+
+    Group:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        ref: { type: string, example: EL1-A }
+        track: { $ref: '#/components/schemas/Track' }
+        academicYear: { type: integer, example: 2024 }
+
+    StudentGroupHistory:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        student: { $ref: '#/components/schemas/Student' }
+        group: { $ref: '#/components/schemas/Group' }
+        fromDate: { type: string, format: date-time }
+        toDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: null = appartenance courante
+
+    CourseAssignment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        course: { $ref: '#/components/schemas/Course' }
+        teacher: { $ref: '#/components/schemas/Teacher' }
+        group: { $ref: '#/components/schemas/Group' }
+        academicYear: { type: integer }
+        semester: { type: integer, enum: [1, 2] }
+
+    Exam:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        course: { $ref: '#/components/schemas/Course' }
+        title: { type: string }
+        dateExam: { type: string, format: date-time }
+        coefficient: { type: number, format: double, example: 0.25 }
+        academicYear: { type: integer }
+        semester: { type: integer, enum: [1, 2] }
+
+    Grade:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        student: { $ref: '#/components/schemas/Student' }
+        exam: { $ref: '#/components/schemas/Exam' }
+        value: { type: number, format: double, example: 14.5 }
+        lastModifiedAt: { type: string, format: date-time }
+
+    GradeHistory:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        grade: { $ref: '#/components/schemas/Grade' }
+        previousValue:
+          type: number
+          format: double
+          nullable: true
+        newValue: { type: number, format: double }
+        reason: { type: string }
+        modifiedBy: { $ref: '#/components/schemas/AppUser' }
+        modifiedAt: { type: string, format: date-time }
+
+    GraduateRow:
+      type: object
+      properties:
+        rank: { type: integer }
+        student: { $ref: '#/components/schemas/Student' }
+        generalAverage: { type: number, format: double }
+
+    CreateStudentRequest:
+      type: object
+      required: [email, password, firstName, lastName, track, enrollmentYear]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+        firstName: { type: string }
+        lastName: { type: string }
+        track: { $ref: '#/components/schemas/Track' }
+        enrollmentYear: { type: integer, example: 2024 }
+
+    CreateTeacherRequest:
+      type: object
+      required: [email, password, firstName, lastName]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+        firstName: { type: string }
+        lastName: { type: string }
+
+    CreateAdminRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+
+    CourseRequest:
+      type: object
+      required: [ref, title, credits]
+      properties:
+        ref: { type: string, example: ALG101 }
+        title: { type: string }
+        credits: { type: integer }
+        track:
+          allOf: [{ $ref: '#/components/schemas/Track' }]
+          nullable: true
+
+    GroupRequest:
+      type: object
+      required: [ref, track, academicYear]
+      properties:
+        ref: { type: string, example: EL1-A }
+        track: { $ref: '#/components/schemas/Track' }
+        academicYear: { type: integer, example: 2024 }
+
+    ChangeGroupRequest:
+      type: object
+      required: [newGroupId]
+      properties:
+        newGroupId: { type: string, format: uuid }
+
+    CourseAssignmentRequest:
+      type: object
+      required: [courseId, teacherId, groupId, academicYear, semester]
+      properties:
+        courseId: { type: string, format: uuid }
+        teacherId: { type: string, format: uuid }
+        groupId: { type: string, format: uuid }
+        academicYear: { type: integer }
+        semester: { type: integer, enum: [1, 2] }
+
+    CreateExamRequest:
+      type: object
+      required: [courseId, title, dateExam, coefficient, academicYear, semester]
+      properties:
+        courseId: { type: string, format: uuid }
+        title: { type: string }
+        dateExam: { type: string, format: date-time }
+        coefficient: { type: number, format: double, example: 0.25 }
+        academicYear: { type: integer }
+        semester: { type: integer, enum: [1, 2] }
+
+    SetGradeRequest:
+      type: object
+      required: [examId, value]
+      properties:
+        examId: { type: string, format: uuid }
+        value: { type: number, format: double, example: 14.5 }
+        reason:
+          type: string
+          nullable: true
+          description: Obligatoire si une note existe deja pour cet (etudiant, examen)
