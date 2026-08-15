@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Promotions - HEI</title>
+</head>
+<body>
+<h1>Promotions</h1>
+<table border="1" cellpadding="6">
+    <thead>
+    <tr>
+        <th>Parcours</th>
+        <th>Annee d'entree</th>
+        <th>Diplomes</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="promotion : ${promotions}">
+        <td th:text="${promotion.track}">EL</td>
+        <td th:text="${promotion.enrollmentYear}">2022</td>
+        <td>
+            <a th:href="@{'/promotions/' + ${promotion.enrollmentYear} + '/' + ${promotion.track} + '/graduates/export'}"
+               target="_blank">
+                Telecharger la liste des diplomes (xlsx)
+            </a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
