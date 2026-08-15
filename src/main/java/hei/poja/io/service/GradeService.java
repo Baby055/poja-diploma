@@ -12,7 +12,6 @@ import hei.poja.io.repository.model.JAppUser;
 import hei.poja.io.repository.model.JExam;
 import hei.poja.io.repository.model.JGrade;
 import hei.poja.io.repository.model.JGradeHistory;
-import hei.poja.io.security.AppUserDetails;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -35,9 +34,14 @@ public class GradeService {
   private final GradeHistoryMapper gradeHistoryMapper;
 
   @Transactional(readOnly = true)
-  public List<Grade> getGradesForStudent(UUID studentId, AppUserDetails principal) {
-    boolean isStaff = principal.hasRole(Role.TEACHER) || principal.hasRole(Role.ADMIN);
-    if (!isStaff && !principal.getId().equals(studentId)) {
+  public List<Grade> getGradesForStudent(UUID studentId, UUID actingUserId) {
+    JAppUser actingUser =
+        appUserRepository
+            .findById(actingUserId)
+            .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
+    boolean isStaff =
+        actingUser.getRole() == Role.TEACHER || actingUser.getRole() == Role.ADMIN;
+    if (!isStaff && !actingUser.getId().equals(studentId)) {
       throw new AccessDeniedException("Vous ne pouvez voir que vos propres notes");
     }
     return gradeMapper.toModel(gradeRepository.findByStudentId(studentId));
