@@ -24,8 +24,8 @@ public class AppUserDetails extends User {
     return id;
   }
 
-public boolean hasRole(Role role) {
+  public boolean hasRole(Role role) {
     return getAuthorities().stream()
         .anyMatch(authority -> authority.getAuthority().equals("ROLE_" + role.name()));
-}
+  }
 }
