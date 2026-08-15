@@ -25,6 +25,7 @@ public class AppUserDetails extends User {
   }
 
   public boolean hasRole(Role role) {
-    return getAuthorities().contains(new SimpleGrantedAuthority("ROLE_" + role.name()));
+    return getAuthorities().stream()
+        .anyMatch(authority -> authority.getAuthority().equals("ROLE_" + role.name()));
   }
 }

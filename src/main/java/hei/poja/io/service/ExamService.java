@@ -13,6 +13,7 @@ import hei.poja.io.repository.model.JCourse;
 import hei.poja.io.repository.model.JExam;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -26,6 +27,10 @@ public class ExamService {
   private final CourseAssignmentRepository courseAssignmentRepository;
   private final AppUserRepository appUserRepository;
   private final ExamMapper examMapper;
+
+  public List<Exam> findByCourse(UUID courseId) {
+    return examMapper.toModel(examRepository.findByCourseId(courseId));
+  }
 
   public Exam createExam(
       UUID courseId,
