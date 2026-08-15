@@ -7,9 +7,11 @@ import hei.poja.io.mail.Mailer;
 import hei.poja.io.mapper.CourseMapper;
 import hei.poja.io.mapper.StudentMapper;
 import hei.poja.io.model.Course;
+import hei.poja.io.model.Role;
 import hei.poja.io.model.Student;
 import hei.poja.io.repository.CourseRepository;
 import hei.poja.io.repository.StudentRepository;
+import hei.poja.io.security.AppUserDetails;
 import jakarta.mail.internet.InternetAddress;
 import java.io.File;
 import java.math.BigDecimal;
@@ -19,6 +21,7 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -34,6 +37,13 @@ public class TranscriptService {
   private final Mailer mailer;
   private final StudentMapper studentMapper;
   private final CourseMapper courseMapper;
+
+  public void assertCanRequestTranscript(UUID studentId, AppUserDetails principal) {
+    boolean isStaff = principal.hasRole(Role.TEACHER) || principal.hasRole(Role.ADMIN);
+    if (!isStaff && !principal.getId().equals(studentId)) {
+      throw new AccessDeniedException("Vous ne pouvez demander que votre propre releve");
+    }
+  }
 
   @Async
   public void generateAndSendTranscript(UUID studentId, boolean complete) {
