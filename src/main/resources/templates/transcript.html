@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Relevé de notes</title>
+    <style>
+        body { font-family: sans-serif; font-size: 12px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #444; padding: 4px 8px; text-align: left; }
+        h1 { font-size: 18px; }
+    </style>
+</head>
+<body>
+<h1>HEI - Relevé de notes <span th:text="${complete} ? 'complet' : 'provisoire'"></span></h1>
+
+<p>
+    Etudiant : <b th:text="${student.firstName} + ' ' + ${student.lastName}"></b><br/>
+    Parcours : <span th:text="${student.track}"></span><br/>
+    Promotion : <span th:text="${student.enrollmentYear}"></span>
+</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Reference</th>
+        <th>Cours</th>
+        <th>Credits</th>
+        <th>Moyenne</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="entry : ${averages}">
+        <td th:text="${entry.key.ref}"></td>
+        <td th:text="${entry.key.title}"></td>
+        <td th:text="${entry.key.credits}"></td>
+        <td th:text="${entry.value} ?: '-'"></td>
+    </tr>
+    </tbody>
+</table>
+
+<p><b>Moyenne generale : <span th:text="${generalAverage}"></span> / 20</b></p>
+</body>
+</html>
