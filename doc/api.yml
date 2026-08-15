@@ -6,7 +6,10 @@ info:
     des diplomes pour HEI (parcours EL / TN).
   version: "1.0.0"
 servers:
-  - url: /
+  - url: http://localhost:8080
+    description: Local
+  - url: https://ja3rfnp2d6pc2nxspnbniaqpvm0mhlho.lambda-url.eu-west-3.on.aws/
+    description: Preprod
 
 security:
   - basicAuth: []

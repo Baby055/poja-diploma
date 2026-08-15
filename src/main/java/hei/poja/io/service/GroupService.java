@@ -7,12 +7,13 @@ import hei.poja.io.model.Group;
 import hei.poja.io.model.Role;
 import hei.poja.io.model.StudentGroupHistory;
 import hei.poja.io.model.Track;
+import hei.poja.io.repository.AppUserRepository;
 import hei.poja.io.repository.GroupRepository;
 import hei.poja.io.repository.StudentGroupHistoryRepository;
 import hei.poja.io.repository.StudentRepository;
+import hei.poja.io.repository.model.JAppUser;
 import hei.poja.io.repository.model.JGroup;
 import hei.poja.io.repository.model.JStudentGroupHistory;
-import hei.poja.io.security.AppUserDetails;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +28,7 @@ public class GroupService {
   private final GroupRepository repository;
   private final StudentRepository studentRepository;
   private final StudentGroupHistoryRepository studentGroupHistoryRepository;
+  private final AppUserRepository appUserRepository;
   private final GroupMapper mapper;
   private final StudentGroupHistoryMapper studentGroupHistoryMapper;
 
@@ -94,9 +96,13 @@ public class GroupService {
   }
 
   @Transactional(readOnly = true)
-  public List<StudentGroupHistory> history(UUID studentId, AppUserDetails principal) {
-    boolean isStaff = principal.hasRole(Role.TEACHER) || principal.hasRole(Role.ADMIN);
-    if (!isStaff && !principal.getId().equals(studentId)) {
+  public List<StudentGroupHistory> history(UUID studentId, UUID actingUserId) {
+    JAppUser actingUser =
+        appUserRepository
+            .findById(actingUserId)
+            .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
+    boolean isStaff = actingUser.getRole() == Role.TEACHER || actingUser.getRole() == Role.ADMIN;
+    if (!isStaff && !actingUserId.equals(studentId)) {
       throw new AccessDeniedException("Vous ne pouvez voir que votre propre historique de groupe");
     }
     return studentGroupHistoryMapper.toModel(

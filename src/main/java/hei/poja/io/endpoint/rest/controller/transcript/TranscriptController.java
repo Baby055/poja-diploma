@@ -22,7 +22,7 @@ public class TranscriptController {
       @PathVariable UUID studentId,
       @RequestParam(defaultValue = "false") boolean complete,
       @AuthenticationPrincipal AppUserDetails principal) {
-    transcriptService.assertCanRequestTranscript(studentId, principal);
+    transcriptService.assertCanRequestTranscript(studentId, principal.getId());
     transcriptService.generateAndSendTranscript(studentId, complete);
     return ResponseEntity.status(HttpStatus.ACCEPTED).build();
   }

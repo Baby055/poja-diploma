@@ -33,7 +33,7 @@ public class CourseAssignmentService {
     return mapper.toModel(
         repository
             .findById(id)
-            .orElseThrow(() -> new NotFoundException("CourseAssignment introuvable ")));
+            .orElseThrow(() -> new NotFoundException("CourseAssignment introuvable")));
   }
 
   @Transactional
@@ -45,7 +45,7 @@ public class CourseAssignmentService {
             .course(
                 courseRepository
                     .findById(courseId)
-                    .orElseThrow(() -> new NotFoundException("Course Introuvable")))
+                    .orElseThrow(() -> new NotFoundException("Course introuvable")))
             .teacher(
                 teacherRepository
                     .findById(teacherId)
@@ -66,15 +66,15 @@ public class CourseAssignmentService {
     JCourseAssignment assignment =
         repository
             .findById(id)
-            .orElseThrow(() -> new NotFoundException("CourseAssignment Introuvable"));
+            .orElseThrow(() -> new NotFoundException("CourseAssignment introuvable"));
     assignment.setCourse(
         courseRepository
             .findById(courseId)
-            .orElseThrow(() -> new NotFoundException("Course Introuvable")));
+            .orElseThrow(() -> new NotFoundException("Course introuvable")));
     assignment.setTeacher(
         teacherRepository
             .findById(teacherId)
-            .orElseThrow(() -> new NotFoundException("Teacher Introuvable")));
+            .orElseThrow(() -> new NotFoundException("Teacher introuvable")));
     assignment.setGroup(
         groupRepository
             .findById(groupId)

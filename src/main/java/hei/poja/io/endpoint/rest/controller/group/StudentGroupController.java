@@ -28,6 +28,6 @@ public class StudentGroupController {
   @GetMapping("/group-history")
   public List<StudentGroupHistory> groupHistory(
       @PathVariable UUID studentId, @AuthenticationPrincipal AppUserDetails principal) {
-    return groupService.history(studentId, principal);
+    return groupService.history(studentId, principal.getId());
   }
 }

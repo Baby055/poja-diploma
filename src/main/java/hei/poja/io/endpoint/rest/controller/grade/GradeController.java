@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,10 +22,11 @@ public class GradeController {
   @GetMapping
   public List<Grade> getGrades(
       @PathVariable UUID studentId, @AuthenticationPrincipal AppUserDetails principal) {
-    return gradeService.getGradesForStudent(studentId, principal);
+    return gradeService.getGradesForStudent(studentId, principal.getId());
   }
 
   @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
   public Grade setGrade(
       @PathVariable UUID studentId,
       @RequestBody SetGradeRequest request,
