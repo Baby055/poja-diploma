@@ -39,8 +39,7 @@ public class GradeService {
         appUserRepository
             .findById(actingUserId)
             .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
-    boolean isStaff =
-        actingUser.getRole() == Role.TEACHER || actingUser.getRole() == Role.ADMIN;
+    boolean isStaff = actingUser.getRole() == Role.TEACHER || actingUser.getRole() == Role.ADMIN;
     if (!isStaff && !actingUser.getId().equals(studentId)) {
       throw new AccessDeniedException("Vous ne pouvez voir que vos propres notes");
     }
