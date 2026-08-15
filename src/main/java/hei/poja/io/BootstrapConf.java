@@ -31,12 +31,12 @@ public class BootstrapConf implements CommandLineRunner {
       return;
     }
     appUserRepository.save(
-            JAppUser.builder()
-                    .id(UUID.randomUUID())
-                    .email(bootstrapEmail)
-                    .passwordHash(passwordEncoder.encode(bootstrapPassword))
-                    .role(Role.ADMIN)
-                    .build());
+        JAppUser.builder()
+            .id(UUID.randomUUID())
+            .email(bootstrapEmail)
+            .passwordHash(passwordEncoder.encode(bootstrapPassword))
+            .role(Role.ADMIN)
+            .build());
     log.warn("Bootstrap admin cree : {} (pensez a changer le mot de passe)", bootstrapEmail);
   }
 }
