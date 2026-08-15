@@ -21,13 +21,13 @@ public class StudentGroupController {
   @PostMapping("/group")
   @ResponseStatus(HttpStatus.CREATED)
   public StudentGroupHistory changeGroup(
-      @PathVariable UUID studentId, @RequestBody ChangeGroupRequest request) {
+          @PathVariable UUID studentId, @RequestBody ChangeGroupRequest request) {
     return groupService.changeGroup(studentId, request.newGroupId());
   }
 
   @GetMapping("/group-history")
   public List<StudentGroupHistory> groupHistory(
-      @PathVariable UUID studentId, @AuthenticationPrincipal AppUserDetails principal) {
-    return groupService.history(studentId, principal);
+          @PathVariable UUID studentId, @AuthenticationPrincipal AppUserDetails principal) {
+    return groupService.history(studentId, principal.getId());
   }
 }

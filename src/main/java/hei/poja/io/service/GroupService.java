@@ -7,12 +7,13 @@ import hei.poja.io.model.Group;
 import hei.poja.io.model.Role;
 import hei.poja.io.model.StudentGroupHistory;
 import hei.poja.io.model.Track;
+import hei.poja.io.repository.AppUserRepository;
 import hei.poja.io.repository.GroupRepository;
 import hei.poja.io.repository.StudentGroupHistoryRepository;
 import hei.poja.io.repository.StudentRepository;
+import hei.poja.io.repository.model.JAppUser;
 import hei.poja.io.repository.model.JGroup;
 import hei.poja.io.repository.model.JStudentGroupHistory;
-import hei.poja.io.security.AppUserDetails;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +28,7 @@ public class GroupService {
   private final GroupRepository repository;
   private final StudentRepository studentRepository;
   private final StudentGroupHistoryRepository studentGroupHistoryRepository;
+  private final AppUserRepository appUserRepository;
   private final GroupMapper mapper;
   private final StudentGroupHistoryMapper studentGroupHistoryMapper;
 
@@ -36,23 +38,18 @@ public class GroupService {
 
   public Group findById(UUID id) {
     return mapper.toModel(
-        repository.findById(id).orElseThrow(() -> new NotFoundException("Group introuvable")));
+            repository.findById(id).orElseThrow(() -> new NotFoundException("Group introuvable")));
   }
 
   public Group create(String ref, Track track, int academicYear) {
     JGroup group =
-        JGroup.builder()
-            .id(UUID.randomUUID())
-            .ref(ref)
-            .track(track)
-            .academicYear(academicYear)
-            .build();
+            JGroup.builder().id(UUID.randomUUID()).ref(ref).track(track).academicYear(academicYear).build();
     return mapper.toModel(repository.save(group));
   }
 
   public Group update(UUID id, String ref, Track track, int academicYear) {
     JGroup group =
-        repository.findById(id).orElseThrow(() -> new NotFoundException("Group introuvable"));
+            repository.findById(id).orElseThrow(() -> new NotFoundException("Group introuvable"));
     group.setRef(ref);
     group.setTrack(track);
     group.setAcademicYear(academicYear);
@@ -66,40 +63,42 @@ public class GroupService {
   @Transactional
   public StudentGroupHistory changeGroup(UUID studentId, UUID newGroupId) {
     var student =
-        studentRepository
-            .findById(studentId)
-            .orElseThrow(() -> new NotFoundException("Student introuvable"));
+            studentRepository
+                    .findById(studentId)
+                    .orElseThrow(() -> new NotFoundException("Student introuvable"));
     JGroup newGroup =
-        repository
-            .findById(newGroupId)
-            .orElseThrow(() -> new NotFoundException("Group introuvable"));
+            repository.findById(newGroupId).orElseThrow(() -> new NotFoundException("Group introuvable"));
 
     Instant now = Instant.now();
     studentGroupHistoryRepository
-        .findByStudentIdAndToDateIsNull(studentId)
-        .ifPresent(
-            current -> {
-              current.setToDate(now);
-              studentGroupHistoryRepository.save(current);
-            });
+            .findByStudentIdAndToDateIsNull(studentId)
+            .ifPresent(
+                    current -> {
+                      current.setToDate(now);
+                      studentGroupHistoryRepository.save(current);
+                    });
 
     JStudentGroupHistory entry =
-        JStudentGroupHistory.builder()
-            .id(UUID.randomUUID())
-            .student(student)
-            .group(newGroup)
-            .fromDate(now)
-            .build();
+            JStudentGroupHistory.builder()
+                    .id(UUID.randomUUID())
+                    .student(student)
+                    .group(newGroup)
+                    .fromDate(now)
+                    .build();
     return studentGroupHistoryMapper.toModel(studentGroupHistoryRepository.save(entry));
   }
 
   @Transactional(readOnly = true)
-  public List<StudentGroupHistory> history(UUID studentId, AppUserDetails principal) {
-    boolean isStaff = principal.hasRole(Role.TEACHER) || principal.hasRole(Role.ADMIN);
-    if (!isStaff && !principal.getId().equals(studentId)) {
+  public List<StudentGroupHistory> history(UUID studentId, UUID actingUserId) {
+    JAppUser actingUser =
+            appUserRepository
+                    .findById(actingUserId)
+                    .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
+    boolean isStaff = actingUser.getRole() == Role.TEACHER || actingUser.getRole() == Role.ADMIN;
+    if (!isStaff && !actingUserId.equals(studentId)) {
       throw new AccessDeniedException("Vous ne pouvez voir que votre propre historique de groupe");
     }
     return studentGroupHistoryMapper.toModel(
-        studentGroupHistoryRepository.findByStudentIdOrderByFromDateDesc(studentId));
+            studentGroupHistoryRepository.findByStudentIdOrderByFromDateDesc(studentId));
   }
 }
