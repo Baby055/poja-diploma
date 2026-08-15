@@ -1,4 +1,4 @@
-package hei.poja.io.endpoint.rest.web;
+package hei.poja.io.endpoint.web;
 
 import org.springframework.ui.Model;
 import hei.poja.io.service.GraduateExportService;
