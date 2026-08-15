@@ -14,47 +14,43 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @AllArgsConstructor
 public class AccountController {
-    private final AccountService accountService;
+  private final AccountService accountService;
 
-    public record CreateStudentRequest(
-            String email,
-            String password,
-            String firstName,
-            String lastName,
-            Track track,
-            int enrollmentYear){}
+  public record CreateStudentRequest(
+      String email,
+      String password,
+      String firstName,
+      String lastName,
+      Track track,
+      int enrollmentYear) {}
 
-    public record CreateTeacherRequest(
-            String email,
-            String password,
-            String firstName,
-            String lastName) {}
+  public record CreateTeacherRequest(
+      String email, String password, String firstName, String lastName) {}
 
-    public record CreateAdminRequest(String email, String password) {}
+  public record CreateAdminRequest(String email, String password) {}
 
-    @PostMapping("/students")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Student createStudent(@RequestBody CreateStudentRequest request) {
-        return accountService.createStudent(
-                request.email(),
-                request.password(),
-                request.firstName(),
-                request.lastName(),
-                request.track(),
-                request.enrollmentYear()
-        );
-    }
+  @PostMapping("/students")
+  @ResponseStatus(HttpStatus.CREATED)
+  public Student createStudent(@RequestBody CreateStudentRequest request) {
+    return accountService.createStudent(
+        request.email(),
+        request.password(),
+        request.firstName(),
+        request.lastName(),
+        request.track(),
+        request.enrollmentYear());
+  }
 
-    @PostMapping("/teachers")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Teacher createTeacher(@RequestBody CreateTeacherRequest request) {
-        return accountService.createTeacher(
-                request.email(), request.password(), request.firstName(), request.lastName());
-    }
+  @PostMapping("/teachers")
+  @ResponseStatus(HttpStatus.CREATED)
+  public Teacher createTeacher(@RequestBody CreateTeacherRequest request) {
+    return accountService.createTeacher(
+        request.email(), request.password(), request.firstName(), request.lastName());
+  }
 
-    @PostMapping("/admins")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void createAdmin(@RequestBody CreateAdminRequest request) {
-        accountService.createAdmin(request.email(), request.password());
-    }
+  @PostMapping("/admins")
+  @ResponseStatus(HttpStatus.CREATED)
+  public void createAdmin(@RequestBody CreateAdminRequest request) {
+    accountService.createAdmin(request.email(), request.password());
+  }
 }
