@@ -15,10 +15,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @AllArgsConstructor
 @Slf4j
 public class BootstrapConf implements CommandLineRunner {
+
   private final AppUserRepository appUserRepository;
   private final PasswordEncoder passwordEncoder;
 
-  @Value("${bootstrap.admin.email:hei.sombiniaina@gmail.com}")
+  @Value("${bootstrap.admin.email:admin@hei.school}")
   private String bootstrapEmail;
 
   @Value("${bootstrap.admin.password:mot_de_passe_fictif}")
@@ -26,9 +27,7 @@ public class BootstrapConf implements CommandLineRunner {
 
   @Override
   public void run(String... args) {
-    boolean adminExists =
-        appUserRepository.findAll().stream().anyMatch(u -> u.getRole() == Role.ADMIN);
-    if (adminExists) {
+    if (appUserRepository.existsByRole(Role.ADMIN)) {
       return;
     }
     appUserRepository.save(
