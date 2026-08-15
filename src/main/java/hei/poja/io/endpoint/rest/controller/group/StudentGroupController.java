@@ -1,11 +1,13 @@
 package hei.poja.io.endpoint.rest.controller.group;
 
 import hei.poja.io.model.StudentGroupHistory;
+import hei.poja.io.security.AppUserDetails;
 import hei.poja.io.service.GroupService;
 import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,7 +26,8 @@ public class StudentGroupController {
   }
 
   @GetMapping("/group-history")
-  public List<StudentGroupHistory> groupHistory(@PathVariable UUID studentId) {
-    return groupService.history(studentId);
+  public List<StudentGroupHistory> groupHistory(
+      @PathVariable UUID studentId, @AuthenticationPrincipal AppUserDetails principal) {
+    return groupService.history(studentId, principal);
   }
 }
