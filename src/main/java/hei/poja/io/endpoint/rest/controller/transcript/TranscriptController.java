@@ -19,10 +19,10 @@ public class TranscriptController {
 
   @PostMapping("/students/{studentId}/transcript")
   public ResponseEntity<Void> sendTranscript(
-      @PathVariable UUID studentId,
-      @RequestParam(defaultValue = "false") boolean complete,
-      @AuthenticationPrincipal AppUserDetails principal) {
-    transcriptService.assertCanRequestTranscript(studentId, principal);
+          @PathVariable UUID studentId,
+          @RequestParam(defaultValue = "false") boolean complete,
+          @AuthenticationPrincipal AppUserDetails principal) {
+    transcriptService.assertCanRequestTranscript(studentId, principal.getId());
     transcriptService.generateAndSendTranscript(studentId, complete);
     return ResponseEntity.status(HttpStatus.ACCEPTED).build();
   }

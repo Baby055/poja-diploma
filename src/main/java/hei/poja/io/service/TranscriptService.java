@@ -9,9 +9,10 @@ import hei.poja.io.mapper.StudentMapper;
 import hei.poja.io.model.Course;
 import hei.poja.io.model.Role;
 import hei.poja.io.model.Student;
+import hei.poja.io.repository.AppUserRepository;
 import hei.poja.io.repository.CourseRepository;
 import hei.poja.io.repository.StudentRepository;
-import hei.poja.io.security.AppUserDetails;
+import hei.poja.io.repository.model.JAppUser;
 import jakarta.mail.internet.InternetAddress;
 import java.io.File;
 import java.math.BigDecimal;
@@ -35,12 +36,17 @@ public class TranscriptService {
   private final CourseAverageService courseAverageService;
   private final BucketComponent bucketComponent;
   private final Mailer mailer;
+  private final AppUserRepository appUserRepository;
   private final StudentMapper studentMapper;
   private final CourseMapper courseMapper;
 
-  public void assertCanRequestTranscript(UUID studentId, AppUserDetails principal) {
-    boolean isStaff = principal.hasRole(Role.TEACHER) || principal.hasRole(Role.ADMIN);
-    if (!isStaff && !principal.getId().equals(studentId)) {
+  public void assertCanRequestTranscript(UUID studentId, UUID actingUserId) {
+    JAppUser actingUser =
+            appUserRepository
+                    .findById(actingUserId)
+                    .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
+    boolean isStaff = actingUser.getRole() == Role.TEACHER || actingUser.getRole() == Role.ADMIN;
+    if (!isStaff && !actingUserId.equals(studentId)) {
       throw new AccessDeniedException("Vous ne pouvez demander que votre propre releve");
     }
   }
@@ -48,13 +54,13 @@ public class TranscriptService {
   @Async
   public void generateAndSendTranscript(UUID studentId, boolean complete) {
     Student student =
-        studentMapper.toModel(
-            studentRepository
-                .findById(studentId)
-                .orElseThrow(() -> new NotFoundException("Student introuvable")));
+            studentMapper.toModel(
+                    studentRepository
+                            .findById(studentId)
+                            .orElseThrow(() -> new NotFoundException("Student introuvable")));
 
     List<Course> courses =
-        courseMapper.toModel(courseRepository.findByTrackIsNullOrTrack(student.track()));
+            courseMapper.toModel(courseRepository.findByTrackIsNullOrTrack(student.track()));
     Map<Course, BigDecimal> averages = courseAverageService.averagesByCourse(studentId, courses);
 
     Context context = new Context();
@@ -67,13 +73,13 @@ public class TranscriptService {
     File pdfFile = renderPdf(html);
 
     String bucketKey =
-        "transcripts/"
-            + studentId
-            + "-"
-            + (complete ? "complet" : "provisoire")
-            + "-"
-            + UUID.randomUUID()
-            + ".pdf";
+            "transcripts/"
+                    + studentId
+                    + "-"
+                    + (complete ? "complet" : "provisoire")
+                    + "-"
+                    + UUID.randomUUID()
+                    + ".pdf";
     bucketComponent.upload(pdfFile, bucketKey);
     var presignedUrl = bucketComponent.presign(bucketKey, java.time.Duration.ofDays(7));
 
@@ -97,19 +103,14 @@ public class TranscriptService {
   private void sendEmail(Student student, String downloadUrl, boolean complete) {
     String subject = "Votre relevé de notes " + (complete ? "complet" : "provisoire");
     String body =
-        "<p>Bonjour "
-            + student.firstName()
-            + ",</p><p>Votre relevé de notes est disponible via le lien suivant (valable 7 jours) :"
-            + " <a href=\""
-            + downloadUrl
-            + "\">telecharger le relevé</a></p>";
+            "<p>Bonjour "
+                    + student.firstName()
+                    + ",</p><p>Votre relevé de notes est disponible via le lien suivant (valable 7 jours) :"
+                    + " <a href=\""
+                    + downloadUrl
+                    + "\">telecharger le relevé</a></p>";
     mailer.accept(
-        new Email(
-            new InternetAddress(student.user().email()),
-            List.of(),
-            List.of(),
-            subject,
-            body,
-            List.of()));
+            new Email(
+                    new InternetAddress(student.user().email()), List.of(), List.of(), subject, body, List.of()));
   }
 }
