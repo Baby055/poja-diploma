@@ -18,12 +18,12 @@ public class TranscriptController {
   private final TranscriptService transcriptService;
 
   @PostMapping("/students/{studentId}/transcript")
-  public ResponseEntity<Void> sendTranscript(
+  public ResponseEntity<String> sendTranscript(
       @PathVariable UUID studentId,
       @RequestParam(defaultValue = "false") boolean complete,
       @AuthenticationPrincipal AppUserDetails principal) {
     transcriptService.assertCanRequestTranscript(studentId, principal.getId());
-    transcriptService.generateAndSendTranscript(studentId, complete);
-    return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+    String downloadUrl = transcriptService.generateAndSendTranscript(studentId, complete);
+    return ResponseEntity.status(HttpStatus.ACCEPTED).body(downloadUrl);
   }
 }

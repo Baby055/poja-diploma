@@ -24,8 +24,10 @@ public class CourseAverageService {
   private final GradeRepository gradeRepository;
 
   @Transactional(readOnly = true)
-  public BigDecimal averageForCourse(UUID studentId, UUID courseId) {
-    List<JGrade> grades = gradeRepository.findByStudentIdAndExam_CourseId(studentId, courseId);
+  public BigDecimal averageForCourse(UUID studentId, UUID courseId, int academicYear) {
+    List<JGrade> grades =
+        gradeRepository.findByStudentIdAndExam_CourseIdAndExam_AcademicYear(
+            studentId, courseId, academicYear);
     if (grades.isEmpty()) {
       return null;
     }
@@ -43,20 +45,22 @@ public class CourseAverageService {
   }
 
   @Transactional(readOnly = true)
-  public Map<Course, BigDecimal> averagesByCourse(UUID studentId, List<Course> courses) {
+  public Map<Course, BigDecimal> averagesByCourse(
+      UUID studentId, List<Course> courses, int academicYear) {
     return courses.stream()
         .collect(
             Collectors.toMap(
                 course -> course,
-                course -> averageForCourse(studentId, course.id()),
+                course -> averageForCourse(studentId, course.id(), academicYear),
                 (a, b) -> a,
                 java.util.LinkedHashMap::new));
   }
 
   @Transactional(readOnly = true)
-  public boolean isEligibleForDiploma(UUID studentId, List<Course> curriculumCourses) {
+  public boolean isEligibleForDiploma(
+      UUID studentId, List<Course> curriculumCourses, int academicYear) {
     for (Course course : curriculumCourses) {
-      BigDecimal average = averageForCourse(studentId, course.id());
+      BigDecimal average = averageForCourse(studentId, course.id(), academicYear);
       if (average == null || average.compareTo(BigDecimal.TEN) < 0) {
         return false;
       }
@@ -65,11 +69,12 @@ public class CourseAverageService {
   }
 
   @Transactional(readOnly = true)
-  public BigDecimal generalAverage(UUID studentId, List<Course> curriculumCourses) {
+  public BigDecimal generalAverage(
+      UUID studentId, List<Course> curriculumCourses, int academicYear) {
     BigDecimal weightedSum = BigDecimal.ZERO;
     int totalCredits = 0;
     for (Course course : curriculumCourses) {
-      BigDecimal average = averageForCourse(studentId, course.id());
+      BigDecimal average = averageForCourse(studentId, course.id(), academicYear);
       if (average == null) {
         continue;
       }

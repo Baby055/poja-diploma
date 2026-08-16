@@ -16,11 +16,13 @@ import hei.poja.io.repository.model.JAppUser;
 import jakarta.mail.internet.InternetAddress;
 import java.io.File;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,7 @@ public class TranscriptService {
   private final AppUserRepository appUserRepository;
   private final StudentMapper studentMapper;
   private final CourseMapper courseMapper;
+  private final ObjectProvider<TranscriptService> selfProvider;
 
   public void assertCanRequestTranscript(UUID studentId, UUID actingUserId) {
     JAppUser actingUser =
@@ -51,26 +54,27 @@ public class TranscriptService {
     }
   }
 
-  @Async
-  public void generateAndSendTranscript(UUID studentId, boolean complete) {
+  public String generateAndSendTranscript(UUID studentId, boolean complete) {
     Student student =
         studentMapper.toModel(
             studentRepository
                 .findById(studentId)
                 .orElseThrow(() -> new NotFoundException("Student introuvable")));
+    int academicYear = student.enrollmentYear();
 
     List<Course> courses =
         courseMapper.toModel(courseRepository.findByTrackIsNullOrTrack(student.track()));
-    Map<Course, BigDecimal> averages = courseAverageService.averagesByCourse(studentId, courses);
+    Map<Course, BigDecimal> averages =
+        courseAverageService.averagesByCourse(studentId, courses, academicYear);
 
     Context context = new Context();
     context.setVariable("student", student);
     context.setVariable("averages", averages);
     context.setVariable("complete", complete);
-    context.setVariable("generalAverage", courseAverageService.generalAverage(studentId, courses));
+    context.setVariable(
+        "generalAverage", courseAverageService.generalAverage(studentId, courses, academicYear));
 
     String html = templateEngine.process("transcript", context);
-    File pdfFile = renderPdf(html);
 
     String bucketKey =
         "transcripts/"
@@ -80,10 +84,18 @@ public class TranscriptService {
             + "-"
             + UUID.randomUUID()
             + ".pdf";
-    bucketComponent.upload(pdfFile, bucketKey);
-    var presignedUrl = bucketComponent.presign(bucketKey, java.time.Duration.ofDays(7));
+    String downloadUrl = bucketComponent.presign(bucketKey, Duration.ofDays(7)).toString();
 
-    sendEmail(student, presignedUrl.toString(), complete);
+    selfProvider.getObject().sendTranscriptAsync(html, bucketKey, downloadUrl, student, complete);
+    return downloadUrl;
+  }
+
+  @Async
+  public void sendTranscriptAsync(
+      String html, String bucketKey, String downloadUrl, Student student, boolean complete) {
+    File pdfFile = renderPdf(html);
+    bucketComponent.upload(pdfFile, bucketKey);
+    sendEmail(student, downloadUrl, complete);
   }
 
   @SneakyThrows
