@@ -60,11 +60,17 @@ public class GraduateExportService {
 
     List<GraduateRow> unranked =
         students.stream()
-            .filter(student -> courseAverageService.isEligibleForDiploma(student.id(), curriculum))
+            .filter(
+                student ->
+                    courseAverageService.isEligibleForDiploma(
+                        student.id(), curriculum, enrollmentYear))
             .map(
                 student ->
                     new GraduateRow(
-                        0, student, courseAverageService.generalAverage(student.id(), curriculum)))
+                        0,
+                        student,
+                        courseAverageService.generalAverage(
+                            student.id(), curriculum, enrollmentYear)))
             .sorted(Comparator.comparing(GraduateRow::generalAverage).reversed())
             .toList();
 
