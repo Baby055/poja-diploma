@@ -13,27 +13,33 @@ import org.junit.jupiter.api.Test;
 
 class ExamMapperTest {
 
-    private final ExamMapper mapper = new ExamMapper(new CourseMapper());
+  private final ExamMapper mapper = new ExamMapper(new CourseMapper());
 
-    @Test
-    void toModel_maps_exam_and_nested_course() {
-        UUID id = UUID.randomUUID();
-        JCourse course =
-                JCourse.builder().id(UUID.randomUUID()).ref("ALG101").title("Algo").credits(5).track(Track.EL).build();
-        JExam entity =
-                JExam.builder()
-                        .id(id)
-                        .course(course)
-                        .title("Final")
-                        .dateExam(Instant.now())
-                        .coefficient(new BigDecimal("0.5"))
-                        .academicYear(2024)
-                        .semester(1)
-                        .build();
+  @Test
+  void toModel_maps_exam_and_nested_course() {
+    UUID id = UUID.randomUUID();
+    JCourse course =
+        JCourse.builder()
+            .id(UUID.randomUUID())
+            .ref("ALG101")
+            .title("Algo")
+            .credits(5)
+            .track(Track.EL)
+            .build();
+    JExam entity =
+        JExam.builder()
+            .id(id)
+            .course(course)
+            .title("Final")
+            .dateExam(Instant.now())
+            .coefficient(new BigDecimal("0.5"))
+            .academicYear(2024)
+            .semester(1)
+            .build();
 
-        Exam model = mapper.toModel(entity);
+    Exam model = mapper.toModel(entity);
 
-        assertThat(model.course().ref()).isEqualTo("ALG101");
-        assertThat(model.coefficient()).isEqualByComparingTo("0.5");
-    }
+    assertThat(model.course().ref()).isEqualTo("ALG101");
+    assertThat(model.coefficient()).isEqualByComparingTo("0.5");
+  }
 }
