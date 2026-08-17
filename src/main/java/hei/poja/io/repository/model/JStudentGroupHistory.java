@@ -16,6 +16,7 @@ public class JStudentGroupHistory {
   @Id private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "student_id")
   private JStudent student;
 
   @ManyToOne(fetch = FetchType.LAZY)

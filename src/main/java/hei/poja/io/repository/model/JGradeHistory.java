@@ -26,6 +26,7 @@ public class JGradeHistory {
   private String reason;
 
   @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "modified_by")
   private JAppUser modifiedBy;
 
   private Instant modifiedAt;

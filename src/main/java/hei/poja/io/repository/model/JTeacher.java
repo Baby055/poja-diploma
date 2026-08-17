@@ -14,7 +14,10 @@ import lombok.*;
 public class JTeacher {
   @Id private UUID id;
 
-  @OneToOne @MapsId private JAppUser user;
+  @OneToOne
+  @MapsId
+  @JoinColumn(name = "id")
+  private JAppUser user;
 
   private String firstName;
   private String lastName;
