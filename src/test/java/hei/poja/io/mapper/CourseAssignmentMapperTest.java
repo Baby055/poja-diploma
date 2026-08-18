@@ -3,7 +3,9 @@ package hei.poja.io.mapper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import hei.poja.io.model.CourseAssignment;
+import hei.poja.io.model.Role;
 import hei.poja.io.model.Track;
+import hei.poja.io.repository.model.JAppUser;
 import hei.poja.io.repository.model.JCourse;
 import hei.poja.io.repository.model.JCourseAssignment;
 import hei.poja.io.repository.model.JGroup;
@@ -28,8 +30,20 @@ class CourseAssignmentMapperTest {
             .credits(5)
             .track(Track.EL)
             .build();
+    JAppUser appUser =
+        JAppUser.builder()
+            .id(UUID.randomUUID())
+            .email("ada@example.com")
+            .passwordHash("hash")
+            .role(Role.TEACHER)
+            .build();
     JTeacher teacher =
-        JTeacher.builder().id(UUID.randomUUID()).firstName("Ada").lastName("Lovelace").build();
+        JTeacher.builder()
+            .id(UUID.randomUUID())
+            .user(appUser)
+            .firstName("Ada")
+            .lastName("Lovelace")
+            .build();
     JGroup group =
         JGroup.builder()
             .id(UUID.randomUUID())
