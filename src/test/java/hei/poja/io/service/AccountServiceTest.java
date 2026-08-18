@@ -26,94 +26,101 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest {
 
-    @Mock private AppUserRepository appUserRepository;
-    @Mock private StudentRepository studentRepository;
-    @Mock private TeacherRepository teacherRepository;
-    @Mock private PasswordEncoder passwordEncoder;
+  @Mock private AppUserRepository appUserRepository;
+  @Mock private StudentRepository studentRepository;
+  @Mock private TeacherRepository teacherRepository;
+  @Mock private PasswordEncoder passwordEncoder;
 
-    private AccountService accountService;
+  private AccountService accountService;
 
-    @BeforeEach
-    void setUp() {
-        AppUserMapper appUserMapper = new AppUserMapper();
-        accountService =
-                new AccountService(
-                        appUserRepository,
-                        studentRepository,
-                        teacherRepository,
-                        passwordEncoder,
-                        new StudentMapper(appUserMapper),
-                        new TeacherMapper(appUserMapper));
-    }
+  @BeforeEach
+  void setUp() {
+    AppUserMapper appUserMapper = new AppUserMapper();
+    accountService =
+        new AccountService(
+            appUserRepository,
+            studentRepository,
+            teacherRepository,
+            passwordEncoder,
+            new StudentMapper(appUserMapper),
+            new TeacherMapper(appUserMapper));
+  }
 
-    @Test
-    void createStudent_should_reject_duplicate_email() {
-        when(appUserRepository.findByEmail("etu@hei.school")).thenReturn(Optional.of(new JAppUser()));
+  @Test
+  void createStudent_should_reject_duplicate_email() {
+    when(appUserRepository.findByEmail("etu@hei.school")).thenReturn(Optional.of(new JAppUser()));
 
-        assertThatThrownBy(
-                () -> accountService.createStudent("etu@hei.school", "pwd", "Grace", "Hopper", Track.EL, 2024))
-                .isInstanceOf(ConflictException.class);
-    }
+    assertThatThrownBy(
+            () ->
+                accountService.createStudent(
+                    "etu@hei.school", "pwd", "Grace", "Hopper", Track.EL, 2024))
+        .isInstanceOf(ConflictException.class);
+  }
 
-    @Test
-    void createStudent_should_hash_password_and_save() {
-        when(appUserRepository.findByEmail("etu@hei.school")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("pwd")).thenReturn("hashed-pwd");
-        when(appUserRepository.save(ArgumentMatchers.any())).thenAnswer(inv -> inv.getArgument(0));
-        when(studentRepository.save(ArgumentMatchers.any())).thenAnswer(inv -> inv.getArgument(0));
+  @Test
+  void createStudent_should_hash_password_and_save() {
+    when(appUserRepository.findByEmail("etu@hei.school")).thenReturn(Optional.empty());
+    when(passwordEncoder.encode("pwd")).thenReturn("hashed-pwd");
+    when(appUserRepository.save(ArgumentMatchers.any())).thenAnswer(inv -> inv.getArgument(0));
+    when(studentRepository.save(ArgumentMatchers.any())).thenAnswer(inv -> inv.getArgument(0));
 
-        var student = accountService.createStudent("etu@hei.school", "pwd", "Grace", "Hopper", Track.EL, 2024);
+    var student =
+        accountService.createStudent("etu@hei.school", "pwd", "Grace", "Hopper", Track.EL, 2024);
 
-        assertThat(student.firstName()).isEqualTo("Grace");
-        assertThat(student.lastName()).isEqualTo("Hopper");
-        assertThat(student.track()).isEqualTo(Track.EL);
-        assertThat(student.enrollmentYear()).isEqualTo(2024);
-        assertThat(student.user().passwordHash()).isEqualTo("hashed-pwd");
-        assertThat(student.user().role()).isEqualTo(Role.STUDENT);
-    }
+    assertThat(student.firstName()).isEqualTo("Grace");
+    assertThat(student.lastName()).isEqualTo("Hopper");
+    assertThat(student.track()).isEqualTo(Track.EL);
+    assertThat(student.enrollmentYear()).isEqualTo(2024);
+    assertThat(student.user().passwordHash()).isEqualTo("hashed-pwd");
+    assertThat(student.user().role()).isEqualTo(Role.STUDENT);
+  }
 
-    @Test
-    void createTeacher_should_reject_duplicate_email() {
-        when(appUserRepository.findByEmail("prof@hei.school")).thenReturn(Optional.of(new JAppUser()));
+  @Test
+  void createTeacher_should_reject_duplicate_email() {
+    when(appUserRepository.findByEmail("prof@hei.school")).thenReturn(Optional.of(new JAppUser()));
 
-        assertThatThrownBy(() -> accountService.createTeacher("prof@hei.school", "pwd", "Ada", "Lovelace"))
-                .isInstanceOf(ConflictException.class);
-    }
+    assertThatThrownBy(
+            () -> accountService.createTeacher("prof@hei.school", "pwd", "Ada", "Lovelace"))
+        .isInstanceOf(ConflictException.class);
+  }
 
-    @Test
-    void createTeacher_should_hash_password_and_save() {
-        when(appUserRepository.findByEmail("prof@hei.school")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("pwd")).thenReturn("hashed-pwd");
-        when(appUserRepository.save(ArgumentMatchers.any())).thenAnswer(inv -> inv.getArgument(0));
-        when(teacherRepository.save(ArgumentMatchers.any())).thenAnswer(inv -> inv.getArgument(0));
+  @Test
+  void createTeacher_should_hash_password_and_save() {
+    when(appUserRepository.findByEmail("prof@hei.school")).thenReturn(Optional.empty());
+    when(passwordEncoder.encode("pwd")).thenReturn("hashed-pwd");
+    when(appUserRepository.save(ArgumentMatchers.any())).thenAnswer(inv -> inv.getArgument(0));
+    when(teacherRepository.save(ArgumentMatchers.any())).thenAnswer(inv -> inv.getArgument(0));
 
-        var teacher = accountService.createTeacher("prof@hei.school", "pwd", "Ada", "Lovelace");
+    var teacher = accountService.createTeacher("prof@hei.school", "pwd", "Ada", "Lovelace");
 
-        assertThat(teacher.firstName()).isEqualTo("Ada");
-        assertThat(teacher.lastName()).isEqualTo("Lovelace");
-        assertThat(teacher.user().passwordHash()).isEqualTo("hashed-pwd");
-        assertThat(teacher.user().role()).isEqualTo(Role.TEACHER);
-    }
+    assertThat(teacher.firstName()).isEqualTo("Ada");
+    assertThat(teacher.lastName()).isEqualTo("Lovelace");
+    assertThat(teacher.user().passwordHash()).isEqualTo("hashed-pwd");
+    assertThat(teacher.user().role()).isEqualTo(Role.TEACHER);
+  }
 
-    @Test
-    void createAdmin_should_reject_duplicate_email() {
-        when(appUserRepository.findByEmail("admin@hei.school")).thenReturn(Optional.of(new JAppUser()));
+  @Test
+  void createAdmin_should_reject_duplicate_email() {
+    when(appUserRepository.findByEmail("admin@hei.school")).thenReturn(Optional.of(new JAppUser()));
 
-        assertThatThrownBy(() -> accountService.createAdmin("admin@hei.school", "pwd"))
-                .isInstanceOf(ConflictException.class);
-    }
+    assertThatThrownBy(() -> accountService.createAdmin("admin@hei.school", "pwd"))
+        .isInstanceOf(ConflictException.class);
+  }
 
-    @Test
-    void createAdmin_should_save_when_email_free() {
-        when(appUserRepository.findByEmail("admin@hei.school")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("pwd")).thenReturn("hashed");
-        when(appUserRepository.save(ArgumentMatchers.any())).thenAnswer(inv -> inv.getArgument(0));
+  @Test
+  void createAdmin_should_save_when_email_free() {
+    when(appUserRepository.findByEmail("admin@hei.school")).thenReturn(Optional.empty());
+    when(passwordEncoder.encode("pwd")).thenReturn("hashed");
+    when(appUserRepository.save(ArgumentMatchers.any())).thenAnswer(inv -> inv.getArgument(0));
 
-        accountService.createAdmin("admin@hei.school", "pwd");
+    accountService.createAdmin("admin@hei.school", "pwd");
 
-        org.mockito.Mockito.verify(appUserRepository).save(ArgumentMatchers.argThat(user ->
-                user.getEmail().equals("admin@hei.school")
+    org.mockito.Mockito.verify(appUserRepository)
+        .save(
+            ArgumentMatchers.argThat(
+                user ->
+                    user.getEmail().equals("admin@hei.school")
                         && user.getRole() == Role.ADMIN
                         && user.getPasswordHash().equals("hashed")));
-    }
+  }
 }
