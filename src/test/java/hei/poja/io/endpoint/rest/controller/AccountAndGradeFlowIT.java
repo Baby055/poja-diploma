@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 class AccountAndGradeFlowIT extends FacadeIT {
 
@@ -52,10 +54,18 @@ class AccountAndGradeFlowIT extends FacadeIT {
   @Autowired private GroupService groupService;
   @Autowired private CourseAssignmentService courseAssignmentService;
   @Autowired private GradeService gradeService;
+  @Autowired private JdbcTemplate jdbc;
 
   private UUID cachedStudentId;
   private UUID cachedTeacherId;
   private UUID cachedCourseId;
+
+  @BeforeEach
+  void cleanDatabase() {
+    jdbc.execute(
+        "TRUNCATE grade_history, grade, exam, course_assignment, student_group_history,"
+            + " course, app_group, student, teacher, app_user CASCADE");
+  }
 
   private void setupAccountsAndCourse() {
     createAdminSafely(ADMIN_EMAIL, ADMIN_PWD);
@@ -64,6 +74,9 @@ class AccountAndGradeFlowIT extends FacadeIT {
     var student =
         createStudentSafely(STUDENT_EMAIL, STUDENT_PWD, "Grace", "Hopper", Track.EL, ACADEMIC_YEAR);
     var course = courseService.create("ALG101-flow", "Algorithmique", 5, Track.EL);
+    var group = groupService.create("EL1-flow", Track.EL, ACADEMIC_YEAR);
+    groupService.changeGroup(student.id(), group.id());
+    courseAssignmentService.create(course.id(), teacher.id(), group.id(), ACADEMIC_YEAR, 1);
 
     cachedStudentId = student.id();
     cachedTeacherId = teacher.id();
@@ -222,7 +235,9 @@ class AccountAndGradeFlowIT extends FacadeIT {
               "/students/" + studentId() + "/grades",
               new GradeRequest(UUID.fromString(examId), new BigDecimal("12"), null));
       assertThat(firstGrade.getStatusCode()).as("First grade").isEqualTo(CREATED);
-      assertThat(firstGrade.getBody().get("value")).as("Grade value").isEqualTo(12.0);
+      assertThat(((Number) firstGrade.getBody().get("value")).doubleValue())
+          .as("Grade value")
+          .isEqualTo(12.0);
 
       var forbidden =
           postAs(
@@ -251,7 +266,9 @@ class AccountAndGradeFlowIT extends FacadeIT {
               new GradeRequest(
                   UUID.fromString(examId), new BigDecimal("14"), "erreur de saisie initiale"));
       assertThat(corrected.getStatusCode()).as("Corrected grade").isEqualTo(CREATED);
-      assertThat(corrected.getBody().get("value")).as("Corrected grade value").isEqualTo(14.0);
+      assertThat(((Number) corrected.getBody().get("value")).doubleValue())
+          .as("Corrected grade value")
+          .isEqualTo(14.0);
 
       var ownGrades =
           getAs(STUDENT_EMAIL, STUDENT_PWD, "/students/" + studentId() + "/grades", List.class);
@@ -281,7 +298,9 @@ class AccountAndGradeFlowIT extends FacadeIT {
               "/students/" + studentId() + "/grades",
               new GradeRequest(UUID.fromString(examId), new BigDecimal("16"), "note admin"));
       assertThat(adminGrade.getStatusCode()).as("Admin grades student").isEqualTo(CREATED);
-      assertThat(adminGrade.getBody().get("value")).as("Admin grade value").isEqualTo(16.0);
+      assertThat(((Number) adminGrade.getBody().get("value")).doubleValue())
+          .as("Admin grade value")
+          .isEqualTo(16.0);
     }
 
     @Test
@@ -383,7 +402,7 @@ class AccountAndGradeFlowIT extends FacadeIT {
               STUDENT_PWD,
               "/students/" + studentId() + "/group-history",
               List.class);
-      assertThat(groupHistory.getBody()).as("Group history has 2 entries").hasSize(2);
+      assertThat(groupHistory.getBody()).as("Group history has 3 entries").hasSize(3);
 
       var gradesAfterGroupChange =
           getAs(STUDENT_EMAIL, STUDENT_PWD, "/students/" + studentId() + "/grades", List.class);
@@ -402,16 +421,15 @@ class AccountAndGradeFlowIT extends FacadeIT {
     void student_cannot_view_other_student_grades() {
       setupAccountsAndCourse();
 
-      var other =
-          createStudentSafely(
-              OTHER_STUDENT_EMAIL, OTHER_STUDENT_PWD, "Linus", "Torvalds", Track.EL, ACADEMIC_YEAR);
+      createStudentSafely(
+          OTHER_STUDENT_EMAIL, OTHER_STUDENT_PWD, "Linus", "Torvalds", Track.EL, ACADEMIC_YEAR);
 
       var forbidden =
           getAs(
               OTHER_STUDENT_EMAIL,
               OTHER_STUDENT_PWD,
               "/students/" + studentId() + "/grades",
-              List.class);
+              Object.class);
       assertThat(forbidden.getStatusCode()).as("View other student grades").isEqualTo(FORBIDDEN);
     }
 
@@ -428,7 +446,7 @@ class AccountAndGradeFlowIT extends FacadeIT {
               OTHER_STUDENT_EMAIL,
               OTHER_STUDENT_PWD,
               "/students/" + studentId() + "/group-history",
-              List.class);
+              Object.class);
       assertThat(forbiddenHistory.getStatusCode())
           .as("View other student group history")
           .isEqualTo(FORBIDDEN);
@@ -439,8 +457,14 @@ class AccountAndGradeFlowIT extends FacadeIT {
     void student_can_request_transcript() {
       setupAccountsAndCourse();
 
+      HttpHeaders headers = new HttpHeaders();
+      headers.setBasicAuth(STUDENT_EMAIL, STUDENT_PWD);
       var resp =
-          postAs(STUDENT_EMAIL, STUDENT_PWD, "/students/" + studentId() + "/transcript", null);
+          restTemplate.exchange(
+              "/students/" + studentId() + "/transcript",
+              HttpMethod.POST,
+              new HttpEntity<>(null, headers),
+              String.class);
       assertThat(resp.getStatusCode()).as("Request transcript").isEqualTo(ACCEPTED);
     }
 

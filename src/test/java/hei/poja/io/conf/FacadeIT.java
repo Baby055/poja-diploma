@@ -20,6 +20,8 @@ public class FacadeIT {
 
   @BeforeAll
   static void beforeAll() {
+    System.setProperty("aws.accessKeyId", "test-access-key");
+    System.setProperty("aws.secretAccessKey", "test-secret-access-key");
     POSTGRES_CONF.start();
     getRuntime()
         // Do _not_ stop postgresTest in afterAll as it is shared between multiple subclasses of
