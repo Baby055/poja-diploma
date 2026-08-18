@@ -26,117 +26,158 @@ import org.springframework.http.ResponseEntity;
 
 class AccountControllerIT extends FacadeIT {
 
-    private static final String ADMIN_EMAIL = "admin-acct@hei.school";
-    private static final String ADMIN_PWD = "adminPwd";
-    private static final int ACADEMIC_YEAR = 2024;
+  private static final String ADMIN_EMAIL = "admin-acct@hei.school";
+  private static final String ADMIN_PWD = "adminPwd";
+  private static final int ACADEMIC_YEAR = 2024;
 
-    @Autowired private TestRestTemplate restTemplate;
-    @Autowired private AccountService accountService;
+  @Autowired private TestRestTemplate restTemplate;
+  @Autowired private AccountService accountService;
 
-    @Nested
-    @DisplayName("Account creation via REST")
-    class AccountCreation {
+  @Nested
+  @DisplayName("Account creation via REST")
+  class AccountCreation {
 
-        @Test
-        @DisplayName("Admin can create student accounts")
-        void admin_can_create_student() {
-            ensureAdmin();
+    @Test
+    @DisplayName("Admin can create student accounts")
+    void admin_can_create_student() {
+      ensureAdmin();
 
-            var resp = postAs(ADMIN_EMAIL, ADMIN_PWD, "/students",
-                    new CreateStudentRequest("new-student@acct.hei", "pwd", "A", "B", Track.EL, ACADEMIC_YEAR));
-            assertThat(resp.getStatusCode()).as("Create student").isEqualTo(CREATED);
-        }
-
-        @Test
-        @DisplayName("Admin can create teacher accounts")
-        void admin_can_create_teacher() {
-            ensureAdmin();
-
-            var resp = postAs(ADMIN_EMAIL, ADMIN_PWD, "/teachers",
-                    new CreateTeacherRequest("new-teacher@acct.hei", "pwd", "Ada", "Lovelace"));
-            assertThat(resp.getStatusCode()).as("Create teacher").isEqualTo(CREATED);
-        }
-
-        @Test
-        @DisplayName("Admin can create admin accounts")
-        void admin_can_create_admin() {
-            ensureAdmin();
-
-            var resp = postAs(ADMIN_EMAIL, ADMIN_PWD, "/admins",
-                    new CreateAdminRequest("new-admin@acct.hei", "pwd"));
-            assertThat(resp.getStatusCode()).as("Create admin").isEqualTo(CREATED);
-        }
+      var resp =
+          postAs(
+              ADMIN_EMAIL,
+              ADMIN_PWD,
+              "/students",
+              new CreateStudentRequest(
+                  "new-student@acct.hei", "pwd", "A", "B", Track.EL, ACADEMIC_YEAR));
+      assertThat(resp.getStatusCode()).as("Create student").isEqualTo(CREATED);
     }
 
-    @Nested
-    @DisplayName("Duplicate and invalid requests")
-    class Validation {
+    @Test
+    @DisplayName("Admin can create teacher accounts")
+    void admin_can_create_teacher() {
+      ensureAdmin();
 
-        @Test
-        @DisplayName("Duplicate email returns CONFLICT")
-        void duplicate_account_returns_conflict() {
-            ensureAdmin();
-
-            postAs(ADMIN_EMAIL, ADMIN_PWD, "/students",
-                    new CreateStudentRequest("dup-acct@hei.school", "pwd", "A", "B", Track.EL, ACADEMIC_YEAR));
-
-            var duplicate = postAs(ADMIN_EMAIL, ADMIN_PWD, "/students",
-                    new CreateStudentRequest("dup-acct@hei.school", "pwd", "A", "B", Track.EL, ACADEMIC_YEAR));
-            assertThat(duplicate.getStatusCode()).as("Duplicate creation").isEqualTo(CONFLICT);
-        }
-
-        @Test
-        @DisplayName("Unauthenticated request returns UNAUTHORIZED")
-        void unauthenticated_request_returns_401() {
-            var resp = restTemplate.exchange("/students", HttpMethod.POST,
-                    new HttpEntity<>(Map.of(
-                            "email", "anon-acct@hei.school",
-                            "password", "pwd",
-                            "firstName", "A",
-                            "lastName", "B",
-                            "track", "EL",
-                            "enrollmentYear", ACADEMIC_YEAR)),
-                    Map.class);
-            assertThat(resp.getStatusCode()).as("Unauthenticated access").isEqualTo(UNAUTHORIZED);
-        }
+      var resp =
+          postAs(
+              ADMIN_EMAIL,
+              ADMIN_PWD,
+              "/teachers",
+              new CreateTeacherRequest("new-teacher@acct.hei", "pwd", "Ada", "Lovelace"));
+      assertThat(resp.getStatusCode()).as("Create teacher").isEqualTo(CREATED);
     }
 
-    @Nested
-    @DisplayName("Access control")
-    class AccessControl {
+    @Test
+    @DisplayName("Admin can create admin accounts")
+    void admin_can_create_admin() {
+      ensureAdmin();
 
-        @Test
-        @DisplayName("Non-admin cannot create accounts")
-        void non_admin_cannot_create_accounts() {
-            ensureAdmin();
-            var student = createStudentSafely("simple-acct@hei.school", "pwd", "A", "B", Track.EL, ACADEMIC_YEAR);
+      var resp =
+          postAs(
+              ADMIN_EMAIL,
+              ADMIN_PWD,
+              "/admins",
+              new CreateAdminRequest("new-admin@acct.hei", "pwd"));
+      assertThat(resp.getStatusCode()).as("Create admin").isEqualTo(CREATED);
+    }
+  }
 
-            var attempt = postAs(student.user().email(), "pwd", "/students",
-                    new CreateStudentRequest("x-acct@hei.school", "pwd", "A", "B", Track.EL, ACADEMIC_YEAR));
-            assertThat(attempt.getStatusCode()).as("Student tries to create account").isEqualTo(FORBIDDEN);
-        }
+  @Nested
+  @DisplayName("Duplicate and invalid requests")
+  class Validation {
+
+    @Test
+    @DisplayName("Duplicate email returns CONFLICT")
+    void duplicate_account_returns_conflict() {
+      ensureAdmin();
+
+      postAs(
+          ADMIN_EMAIL,
+          ADMIN_PWD,
+          "/students",
+          new CreateStudentRequest(
+              "dup-acct@hei.school", "pwd", "A", "B", Track.EL, ACADEMIC_YEAR));
+
+      var duplicate =
+          postAs(
+              ADMIN_EMAIL,
+              ADMIN_PWD,
+              "/students",
+              new CreateStudentRequest(
+                  "dup-acct@hei.school", "pwd", "A", "B", Track.EL, ACADEMIC_YEAR));
+      assertThat(duplicate.getStatusCode()).as("Duplicate creation").isEqualTo(CONFLICT);
     }
 
-    private void ensureAdmin() {
-        try { accountService.createAdmin(ADMIN_EMAIL, ADMIN_PWD); } catch (ConflictException ignored) {}
+    @Test
+    @DisplayName("Unauthenticated request returns UNAUTHORIZED")
+    void unauthenticated_request_returns_401() {
+      var resp =
+          restTemplate.exchange(
+              "/students",
+              HttpMethod.POST,
+              new HttpEntity<>(
+                  Map.of(
+                      "email", "anon-acct@hei.school",
+                      "password", "pwd",
+                      "firstName", "A",
+                      "lastName", "B",
+                      "track", "EL",
+                      "enrollmentYear", ACADEMIC_YEAR)),
+              Map.class);
+      assertThat(resp.getStatusCode()).as("Unauthenticated access").isEqualTo(UNAUTHORIZED);
     }
+  }
 
-    private hei.poja.io.model.Student createStudentSafely(String email, String pwd, String first, String last, Track track, int year) {
-        try { return accountService.createStudent(email, pwd, first, last, track, year); } catch (ConflictException e) {
-            return accountService.createStudent(email + "-retry", pwd, first, last, track, year);
-        }
+  @Nested
+  @DisplayName("Access control")
+  class AccessControl {
+
+    @Test
+    @DisplayName("Non-admin cannot create accounts")
+    void non_admin_cannot_create_accounts() {
+      ensureAdmin();
+      var student =
+          createStudentSafely("simple-acct@hei.school", "pwd", "A", "B", Track.EL, ACADEMIC_YEAR);
+
+      var attempt =
+          postAs(
+              student.user().email(),
+              "pwd",
+              "/students",
+              new CreateStudentRequest(
+                  "x-acct@hei.school", "pwd", "A", "B", Track.EL, ACADEMIC_YEAR));
+      assertThat(attempt.getStatusCode())
+          .as("Student tries to create account")
+          .isEqualTo(FORBIDDEN);
     }
+  }
 
-    // -- HTTP helpers --
-
-    private ResponseEntity<Map<String, Object>> postAs(String email, String password, String path, Object body) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(email, password);
-        return restTemplate.exchange(path, HttpMethod.POST, new HttpEntity<>(body, headers), mapType());
+  private void ensureAdmin() {
+    try {
+      accountService.createAdmin(ADMIN_EMAIL, ADMIN_PWD);
+    } catch (ConflictException ignored) {
     }
+  }
 
-    @SuppressWarnings("unchecked")
-    private static Class<Map<String, Object>> mapType() {
-        return (Class<Map<String, Object>>) (Class<?>) Map.class;
+  private hei.poja.io.model.Student createStudentSafely(
+      String email, String pwd, String first, String last, Track track, int year) {
+    try {
+      return accountService.createStudent(email, pwd, first, last, track, year);
+    } catch (ConflictException e) {
+      return accountService.createStudent(email + "-retry", pwd, first, last, track, year);
     }
+  }
+
+  // -- HTTP helpers --
+
+  private ResponseEntity<Map<String, Object>> postAs(
+      String email, String password, String path, Object body) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setBasicAuth(email, password);
+    return restTemplate.exchange(path, HttpMethod.POST, new HttpEntity<>(body, headers), mapType());
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Class<Map<String, Object>> mapType() {
+    return (Class<Map<String, Object>>) (Class<?>) Map.class;
+  }
 }
