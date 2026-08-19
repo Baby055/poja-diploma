@@ -47,13 +47,11 @@ public class CourseAverageService {
   @Transactional(readOnly = true)
   public Map<Course, BigDecimal> averagesByCourse(
       UUID studentId, List<Course> courses, int academicYear) {
-    return courses.stream()
-        .collect(
-            Collectors.toMap(
-                course -> course,
-                course -> averageForCourse(studentId, course.id(), academicYear),
-                (a, b) -> a,
-                java.util.LinkedHashMap::new));
+    Map<Course, BigDecimal> result = new java.util.LinkedHashMap<>();
+    for (Course course : courses) {
+      result.put(course, averageForCourse(studentId, course.id(), academicYear));
+    }
+    return result;
   }
 
   @Transactional(readOnly = true)
